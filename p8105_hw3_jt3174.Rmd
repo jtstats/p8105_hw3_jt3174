@@ -47,9 +47,8 @@ theme_set(theme_minimal() + theme(legend.position = "bottom"))
 
 
 ## **Problem 1**
-This problem uses the Instacart data. DO NOT include this dataset in your local data directory; instead, load the data from the p8105.datasets using:
 
-```{r load data}
+```{r problem 1}
 
 # find the specific data file
 data("instacart")
@@ -59,7 +58,8 @@ data("instacart")
 aisle_data = instacart %>% 
   # group by aisle name
   group_by(aisle) %>% 
-  # count the number of order for each aisle
+  # count the number of order for each distinct aisle
+  distinct() %>% 
   summarize(n_aisle = n()) %>% 
   # sort this list descendently, so the first row is the most ordered aisle
   arrange(desc(n_aisle))
@@ -171,8 +171,47 @@ There are `r count(aisle_data)` aisles, and the most popular aisle is fresh vege
 
 
 
-##**Problem 2**
+## **Problem 2**
 This problem uses the BRFSS data. DO NOT include this dataset in your local data directory; instead, load the data from the p8105.datasets package.
+
+```{r problem 2}
+
+# find the specific data file
+data("brfss_smart2010")
+
+# data cleaning
+
+# create a dataframe
+brfss_data = brfss_smart2010 %>% 
+  # clean the names
+  janitor::clean_names() %>% 
+  # rename some variables 
+  rename("state" = "locationabbr", "response_id" = "respid") %>% 
+  # keep only "Overall Health" topic
+  filter(topic == "Overall Health") %>% 
+  # include only responses from "Excellent" to "Poor"
+  filter(response == "Poor" | response == "Fair" | response == "Good" | response == "Very Good" | response == "Excellent") %>% 
+  # organize responses as a factor taking levels ordered from “Poor” to “Excellent”
+  mutate(response = factor(response, levels = c("Poor", "Fair", "Good", "Very good", "Excellent")))
+  
+brfss_data
+
+```
+
+```{r problem 2 part 2}
+
+# Part: 7 or more location
+
+# create a good dataframe for this part
+
+states_7 = brfss_data %>% 
+  # separate locationdesc from the state name and the county name
+  separate(locationdesc, into = c("state", "county"), sep = 5) %>% 
+  select(-state)
+  
+states_7
+
+```
 
 First, do some data cleaning:
 
