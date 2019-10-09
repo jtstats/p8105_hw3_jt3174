@@ -347,12 +347,13 @@ This dataser called accel_data uses five weeks of accelerometer data collected o
 In this dataset, there are `r count(accel_data)` observations and 6 variables exist. 
 
 The variables are:
-* week = the number of the week of this man's data record
-* day_id = the number of the day of this man's data record
-* day = the day of week of this man's data record
-* minute_in_a_day = the minute of a day of this man's data record
-* activity_count = the activity counts for each minute of a 24-hour day starting at midnight for this man's data record
-* weekday = to indicate whether it is a weekday or a weekend for this man's data record
+
+* week: the number of the week of this man's data record
+* day_id: the number of the day of this man's data record
+* day: the day of week of this man's data record
+* minute_in_a_day: the minute of a day of this man's data record
+* activity_count: the activity counts for each minute of a 24-hour day starting at midnight for this man's data record
+* weekday: to indicate whether it is a weekday or a weekend for this man's data record
 
 Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
 Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
