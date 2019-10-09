@@ -75,7 +75,7 @@ aisle_plot = aisle_data %>%
   # change the order of the datafram
   select(n_aisle, everything()) %>% 
   # change the order of factor aisle according to n_aisle
-  mutate(aisle = forcats::fct_reorder(aisle, n_aisle))
+  mutate(aisle = forcats::fct_reorder(aisle, n_aisle)) 
 
 aisle_plot
 
@@ -90,7 +90,9 @@ aisle_col_chart = ggplot(aisle_plot, aes(x = aisle, y = n_aisle))+
     x = "Aisle",
     y = "Number of Order",
     caption = "Data from The Instacart Online Grocery Shopping Dataset 2017” Website"
-  )
+  ) +
+  # don't show the original x-axis labels for readability
+  scale_x_discrete(labels = NULL)
 
 aisle_col_chart
 
@@ -165,6 +167,8 @@ There are 15 variables in this dataset:
 * department: the name of the department
 
 Some of the key variables are reordered (this tells you whether the item was repurchased or not), and  days_since_prior_order (this tells you how long it takes to reorder an item).
+
+As I went through the process of creating the plots above, I think some useful illustrations of observaitions can be the 2 x 7 table we created. We can find the most popular product within each aisle, and maybe use this data to prepare the inventory and keep on track of how many inventory the store should have on hand to sale. And if we combine this with time of order or date of order, we can maybe find a pattern for certain products and their best selling dates, (for example, turkey and thanksgiving day) to properly prepare our inventory in case that some certain goods would be out-of-stock on certain period of time and having excessive inventory for other times. 
 
 There are `r count(aisle_data)` aisles, and the most popular aisle is fresh vegetables.
 
@@ -255,8 +259,11 @@ excellent_data = brfss_data %>%
 
 excellent_data
 
+# make a Spaghetti Plot for Mean Data Value over Year within a State
+# x-axis: year, y-axis = mean, assign color according to their states
 excellent_plot = ggplot(excellent_data, aes(x = year, y = mean_data, color = state)) + 
   geom_line() +
+  # add title, labels for x- and y-axis, caption
   labs(
     title = "Spaghetti Plot for Mean Data Value over Year within a State",
     x = "Year",
@@ -285,7 +292,8 @@ two_panel_plot = brfss_data %>%
   # set transparency
   geom_density(alpha = 0.5) +
   # create a two panel plot for responses among locations in NY State
-  facet_grid(year ~ response)+
+  facet_grid(year ~ response) +
+  # add title, labels for x- and y- labels and caption
   labs(
     title = "Two Panel Plot for Responses among Locations in NY State",
     x = "Data Value",
@@ -355,5 +363,84 @@ The variables are:
 * activity_count: the activity counts for each minute of a 24-hour day starting at midnight for this man's data record
 * weekday: to indicate whether it is a weekday or a weekend for this man's data record
 
-Traditional analyses of accelerometer data focus on the total activity over the day. Using your tidied dataset, aggregate accross minutes to create a total activity variable for each day, and create a table showing these totals. Are any trends apparent?
-Accelerometer data allows the inspection activity over the course of the day. Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph.
+
+```{r}
+
+total_each_day = accel_data %>%
+  # group by week and day of week, so we would have data for 35 days
+  group_by(week, day) %>% 
+  # find the total for each day
+  summarize(sum_of_day = sum(activity_count)) %>% 
+  # create a table for this
+  knitr::kable(digits = 2)
+
+total_each_day
+
+# to identify a trend, we create a scatterplot connected with a line to check
+
+trend_plot = accel_data %>%
+  # group by week and day of week, so we would have data for 35 days
+  group_by(week, day) %>% 
+  # find the total for each day
+  summarize(sum_of_day = sum(activity_count)) %>% 
+  # ungroup week and day
+  ungroup(week, day) %>% 
+  # add a variable to be the index
+  mutate(day_number = row_number())
+
+trend_plot %>% 
+  # create a scatterplot and let day_number to be x-axis and sum_of_day to be 
+  ggplot(aes(x = day_number, y = sum_of_day)) +
+  geom_point(aes(color = day_number), alpha = 0.5) +
+  geom_line(aes(color = day_number)) +
+  # add title, labels for x- and y- axis and caption
+  labs(
+    title = "Trend Plot for Sum of Day Value Across Days",
+    x = "Days",
+    y = "Total Activity Counts for Each Day",
+    caption = "Data from the Advanced Cardiac Care Center of Columbia University Medical Center"
+  ) +
+  scale_y_continuous(
+    # make the y-axis labels a bit prettier
+    breaks = c(0, 200000, 400000, 600000, 800000),
+    labels = c("0", "200000", "400000", "600000", "800000")
+    )
+
+```
+
+There is no appearant trend over time for the activity counts in each day. The number just oscalate in the range from 1000 to 650000. 
+
+```{r}
+
+inspection_data = accel_data %>% 
+  # group by day of week
+  group_by(day) %>% 
+  # organize minutes to hours
+  mutate(hour_in_a_day = ceiling(minute_in_a_day/60)) %>% 
+  # group by hour and day
+  group_by(day, hour_in_a_day) %>% 
+  # Find the total activity for each hour
+  summarize(sum_by_hour = sum(activity_count)) %>% 
+  ggplot(aes(x = hour_in_a_day, y = sum_by_hour)) +
+  geom_point(aes(color = day)) +
+  geom_line(aes(color = day)) +
+  labs(
+    title = "Plot for 24-hour Activity Time Courses for Each Day",
+    x = "Hour in a Day",
+    y = "Total Activity Counts for Each Hour",
+    caption = "Data from the Advanced Cardiac Care Center of Columbia University Medical Center") +
+    scale_y_continuous(
+    # make the y-axis labels a bit prettier
+    breaks = c(0, 100000, 200000, 300000),
+    labels = c("0", "100000", "200000", "300000")
+  ) +
+    scale_x_continuous(
+    # make the x-axis labels a bit prettier
+    breaks = c(0, 4, 8, 12, 16, 20, 24),
+    labels = c("0", "4", "8", "12", "16", "20", "24"))
+  
+inspection_data
+
+```
+
+According to the plot that R generated, we can see that this man was extremly inactive during 0AM - 8AM everyday, and then pretty much stayed the same level of activeness for the rest of day after 8AM to 8PM. He moved around a lot at Friday nights and Sunday mornings relatively. Then his activity counts gradually decreased after 8PM.
