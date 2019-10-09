@@ -187,6 +187,10 @@ brfss_data = brfss_smart2010 %>%
   janitor::clean_names() %>% 
   # rename some variables 
   rename("state" = "locationabbr", "response_id" = "respid") %>% 
+  # separate locationdesc into 2 new variables: the state name and the county name (aka location)
+  separate(locationdesc, into = c("state_1", "county"), sep = 5) %>% 
+  # remove the redundant state variable
+  select(-state_1) %>% 
   # keep only "Overall Health" topic
   filter(topic == "Overall Health") %>% 
   # include only responses from "Excellent" to "Poor"
@@ -198,34 +202,104 @@ brfss_data
 
 ```
 
-```{r problem 2 part 2}
-
-# Part: 7 or more location
+```{r problem 2: 7 or more location}
 
 # create a good dataframe for this part
-
-states_7 = brfss_data %>% 
-  # separate locationdesc from the state name and the county name
-  separate(locationdesc, into = c("state", "county"), sep = 5) %>% 
-  select(-state)
+# for the year of 2002
+states_2002 = brfss_data %>% 
+  # keep only the data of 2002 year
+  filter(year == "2002") %>% 
+  # group by state
+  group_by(state) %>% 
+  # to ensure this is for distinct counties
+  distinct(county) %>% 
+  # make a state and number of distinct county dataframe
+  summarize(n_location = n()) %>% 
+  # filter out 7 or more locations
+  filter(n_location >= 7)
   
-states_7
+states_2002
+
+# for the year of 2010
+states_2010 = brfss_data %>% 
+  # keep only the data of 2002 year
+  filter(year == "2010") %>% 
+  # group by state
+  group_by(state) %>% 
+  # to ensure this is for distinct counties
+  distinct(county) %>% 
+  # make a state and number of distinct county dataframe
+  summarize(n_location = n()) %>% 
+  # filter out 7 or more locations
+  filter(n_location >= 7)
+  
+states_2010
 
 ```
 
-First, do some data cleaning:
+For the year of 2002, the states were observed at 7 or more locations are Connecticut, Florida, Massachusetts, North Carolina, New Jersey, Pennsylvania.
+For the year of 2010, the states were observed at 7 or more locations are California, Colorado, Florida, Massachusetts, Maryland, North Carolina, Nebraska, New Jersey, New York, Ohio, Pannsylvania, South Carolina, Texas, Washington.
 
-format the data to use appropriate variable names;
-focus on the “Overall Health” topic
-include only responses from “Excellent” to “Poor”
-organize responses as a factor taking levels ordered from “Poor” to “Excellent”
-Using this dataset, do or answer the following (commenting on the results of each):
+```{r construct dataset}
 
-In 2002, which states were observed at 7 or more locations? What about in 2010?
-Construct a dataset that is limited to Excellent responses, and contains, year, state, and a variable that averages the data_value across locations within a state. Make a “spaghetti” plot of this average value over time within a state (that is, make a plot showing a line for each state across years – the geom_line geometry and group aesthetic will help).
-Make a two-panel plot showing, for the years 2006, and 2010, distribution of data_value for responses (“Poor” to “Excellent”) among locations in NY State.
+# make a good datadrame for the plot 
+excellent_data = brfss_data %>% 
+  # keep only excellent responses
+  filter(response == "Excellent") %>% 
+  # select only year, state, data_value, location
+  select(year, state, county, data_value) %>% 
+  # group by year and state
+  group_by(year, state) %>% 
+  # find the mean for data_value for each year and state
+  summarize(mean_data = mean(data_value, na.rm = TRUE))
 
-##**Problem 3**
+excellent_data
+
+excellent_plot = ggplot(excellent_data, aes(x = year, y = mean_data, color = state)) + 
+  geom_line() +
+  labs(
+    title = "Spaghetti Plot for Mean Data Value over Year within a State",
+    x = "Year",
+    y = " Mean Data Value across Locations within a State",
+    caption = "Data from the Behavioral Risk Factors Surveillance System for Selected Metropolitan Area Risk Trends (SMART) for 2002-2010"
+  )
+
+excellent_plot
+
+```
+
+The spaghetti plot indicates that for excellent responses, the average data value for each state across its locations(counties) from 2002 to 2010 is relatively stable (which means there is no big change/jump through this period of time).
+
+```{r two-panel plot}
+
+# create a good dataset for making this plot
+two_panel_plot = brfss_data %>% 
+  # keep only the data of 2006
+  filter(year == "2006" | year == "2010") %>% 
+  # keep only the data of NY state
+  filter(state == "NY") %>% 
+  # group by responses
+  group_by(response) %>% 
+  # making a density plot for data_value and fill different color according to their different responses
+  ggplot(aes(x = data_value, fill = response))+
+  # set transparency
+  geom_density(alpha = 0.5) +
+  # create a two panel plot for responses among locations in NY State
+  facet_grid(year ~ response)+
+  labs(
+    title = "Two Panel Plot for Responses among Locations in NY State",
+    x = "Data Value",
+    y = "Density",
+    caption = "Data from the Behavioral Risk Factors Surveillance System for Selected Metropolitan Area Risk Trends (SMART) for 2002-2010"
+  )
+
+two_panel_plot
+
+```
+
+Within the state of NY, the distributions of each response given the same response is mostly similar between the year of 2006 and 2010. The Fair response differed a little, but it is not terribly different. 
+
+## **Problem 3**
 Accelerometers have become an appealing alternative to self-report techniques for studying physical activity in observational studies and clinical trials, largely because of their relative objectivity. During observation periods, the devices measure “activity counts” in a short period; one-minute intervals are common. Because accelerometers can be worn comfortably and unobtrusively, they produce around-the-clock observations.
 
 This problem uses five weeks of accelerometer data collected on a 63 year-old male with BMI 25, who was admitted to the Advanced Cardiac Care Center of Columbia University Medical Center and diagnosed with congestive heart failure (CHF). The data can be downloaded here. In this spreadsheet, variables activity.* are the activity counts for each minute of a 24-hour day starting at midnight.
