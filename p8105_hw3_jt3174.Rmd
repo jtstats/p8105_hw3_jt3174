@@ -198,7 +198,7 @@ brfss_data = brfss_smart2010 %>%
   # keep only "Overall Health" topic
   filter(topic == "Overall Health") %>% 
   # include only responses from "Excellent" to "Poor"
-  filter(response == "Poor" | response == "Fair" | response == "Good" | response == "Very Good" | response == "Excellent") %>% 
+  filter(response == "Poor" | response == "Fair" | response == "Good" | response == "Very good" | response == "Excellent") %>% 
   # organize responses as a factor taking levels ordered from “Poor” to “Excellent”
   mutate(response = factor(response, levels = c("Poor", "Fair", "Good", "Very good", "Excellent")))
   
@@ -290,7 +290,7 @@ two_panel_plot = brfss_data %>%
   # making a density plot for data_value and fill different color according to their different responses
   ggplot(aes(x = data_value, fill = response))+
   # set transparency
-  geom_density(alpha = 0.5) +
+  geom_density(alpha = 0.5， adjust = 0.5) +
   # create a two panel plot for responses among locations in NY State
   facet_grid(year ~ response) +
   # add title, labels for x- and y- labels and caption
