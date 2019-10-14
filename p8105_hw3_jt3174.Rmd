@@ -412,18 +412,20 @@ There is no appearant trend over time for the activity counts in each day. The n
 
 ```{r}
 
-inspection_data = accel_data %>% 
-  # group by day of week
-  group_by(day) %>% 
+inspection_data = accel_data %>%
+  # group by week and day to have 35 days
+  group_by(week, day) %>% 
   # organize minutes to hours
   mutate(hour_in_a_day = ceiling(minute_in_a_day/60)) %>% 
-  # group by hour and day
-  group_by(day, hour_in_a_day) %>% 
-  # Find the total activity for each hour
+  # group by week, day and each hour
+  group_by(week, day, hour_in_a_day) %>% 
+  # Find the total activity for each hour for each day
   summarize(sum_by_hour = sum(activity_count)) %>% 
+  # plot with x = hour_in_a_day and y-axis is sum_by_hour
   ggplot(aes(x = hour_in_a_day, y = sum_by_hour)) +
+  # color by day
   geom_point(aes(color = day)) +
-  geom_line(aes(color = day)) +
+  # give labels and captions for the plot
   labs(
     title = "Plot for 24-hour Activity Time Courses for Each Day",
     x = "Hour in a Day",
@@ -431,8 +433,8 @@ inspection_data = accel_data %>%
     caption = "Data from the Advanced Cardiac Care Center of Columbia University Medical Center") +
     scale_y_continuous(
     # make the y-axis labels a bit prettier
-    breaks = c(0, 100000, 200000, 300000),
-    labels = c("0", "100000", "200000", "300000")
+    breaks = c(0, 20000, 40000, 60000, 80000, 100000， 120000),
+    labels = c("0", "20000", "40000", "60000", "80000", "100000", "120000")
   ) +
     scale_x_continuous(
     # make the x-axis labels a bit prettier
