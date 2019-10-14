@@ -425,6 +425,8 @@ inspection_data = accel_data %>%
   ggplot(aes(x = hour_in_a_day, y = sum_by_hour)) +
   # color by day
   geom_point(aes(color = day)) +
+  # connect the dot of hour data to indicate that these data are for each day
+  geom_line(aes(color = day)) +
   # give labels and captions for the plot
   labs(
     title = "Plot for 24-hour Activity Time Courses for Each Day",
